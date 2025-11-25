@@ -10,6 +10,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { QueuesModule } from './queues/queues.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     AnalyticsModule,
     UploadsModule,
     NotificationsModule,
+    QueuesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
