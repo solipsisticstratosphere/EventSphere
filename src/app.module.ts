@@ -11,6 +11,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { QueuesModule } from './queues/queues.module';
+import { WebsocketsModule } from './websockets/websockets.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { QueuesModule } from './queues/queues.module';
     UploadsModule,
     NotificationsModule,
     QueuesModule,
+    WebsocketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
