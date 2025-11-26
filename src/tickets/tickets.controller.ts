@@ -8,6 +8,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
+  @Post('purchase/:eventId')
+  @UseGuards(JwtAuthGuard)
+  purchaseTicket(@Request() req, @Param('eventId') eventId: string) {
+    return this.ticketsService.purchaseTicket(req.user.id, eventId);
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Request() req, @Body() createTicketDto: CreateTicketDto) {

@@ -12,6 +12,12 @@ enum Role {
   ORGANIZER
 }
 
+enum TicketStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -54,9 +60,10 @@ model Event {
 }
 
 model Ticket {
-  id        String   @id @default(cuid())
-  status    String   @default("ACTIVE")
-  createdAt DateTime @default(now())
+  id        String       @id @default(cuid())
+  status    TicketStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   eventId String
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -64,6 +71,7 @@ model Ticket {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, eventId])
   @@map("tickets")
 }
 
