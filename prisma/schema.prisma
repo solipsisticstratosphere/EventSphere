@@ -32,6 +32,9 @@ model User {
   tickets       Ticket[]
   notifications Notification[]
 
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
   @@map("users")
 }
 
@@ -56,6 +59,11 @@ model Event {
   tickets   Ticket[]
   analytics Analytics[]
 
+  @@index([userId])
+  @@index([createdAt])
+  @@index([date])
+  @@index([status])
+  @@index([category])
   @@map("events")
 }
 
@@ -72,6 +80,10 @@ model Ticket {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
+  @@index([status])
+  @@index([createdAt])
   @@map("tickets")
 }
 
@@ -83,6 +95,8 @@ model Analytics {
   eventId String
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  @@index([eventId])
+  @@index([date])
   @@map("analytics")
 }
 
@@ -104,5 +118,8 @@ model Notification {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
   @@map("notifications")
 }
