@@ -1,10 +1,16 @@
 import { Worker } from 'bullmq';
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject, forwardRef } from '@nestjs/common';
 import { TicketPurchasedData } from './notification.queue';
+import { EventsGateway } from '../websockets/events.gateway';
 
 @Injectable()
 export class NotificationProcessor implements OnModuleInit, OnModuleDestroy {
   private worker: Worker;
+
+  constructor(
+    @Inject(forwardRef(() => EventsGateway))
+    private eventsGateway: EventsGateway,
+  ) {}
 
   async onModuleInit() {
     this.worker = new Worker(
@@ -52,5 +58,16 @@ export class NotificationProcessor implements OnModuleInit, OnModuleDestroy {
     console.log('_____________________________');
     console.log('Thank you for your purchase');
     console.log('='.repeat(50));
+
+    await this.eventsGateway.emitTicketPurchased(
+      data.eventId,
+      data.userId,
+      {
+        ticketId: data.ticketId,
+        eventTitle: data.eventTitle,
+        eventDate: data.eventDate,
+        userName: data.userName,
+      },
+    );
   }
 }

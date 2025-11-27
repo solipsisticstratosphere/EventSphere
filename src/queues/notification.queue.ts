@@ -2,8 +2,10 @@ import { Queue } from 'bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 
 export interface TicketPurchasedData {
+  userId: string;
   userEmail: string;
   userName: string;
+  eventId: string;
   eventTitle: string;
   eventDate: Date;
   ticketId: string;

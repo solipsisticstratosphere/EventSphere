@@ -70,8 +70,10 @@ export class TicketsService {
         });
 
         await this.notificationQueue.addTicketPurchasedNotification({
+          userId: paidTicket.user.id,
           userEmail: paidTicket.user.email,
           userName: paidTicket.user.name,
+          eventId: paidTicket.event.id,
           eventTitle: paidTicket.event.title,
           eventDate: paidTicket.event.date,
           ticketId: paidTicket.id,
