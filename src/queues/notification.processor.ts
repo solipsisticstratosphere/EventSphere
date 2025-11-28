@@ -1,11 +1,12 @@
 import { Worker } from 'bullmq';
-import { Injectable, OnModuleInit, OnModuleDestroy, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject, forwardRef, Logger } from '@nestjs/common';
 import { TicketPurchasedData } from './notification.queue';
 import { EventsGateway } from '../websockets/events.gateway';
 
 @Injectable()
 export class NotificationProcessor implements OnModuleInit, OnModuleDestroy {
   private worker: Worker;
+  private readonly logger = new Logger(NotificationProcessor.name);
 
   constructor(
     @Inject(forwardRef(() => EventsGateway))
@@ -29,11 +30,11 @@ export class NotificationProcessor implements OnModuleInit, OnModuleDestroy {
     );
 
     this.worker.on('completed', (job) => {
-      console.log(`Job ${job.id} completed successfully`);
+      this.logger.log(`Job ${job.id} completed successfully`);
     });
 
     this.worker.on('failed', (job, err) => {
-      console.error(`Job ${job?.id} failed:`, err);
+      this.logger.error(`Job ${job?.id} failed`, err);
     });
   }
 
@@ -42,22 +43,26 @@ export class NotificationProcessor implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleTicketPurchased(data: TicketPurchasedData) {
-    console.log('='.repeat(50));
-    console.log('EMAIL NOTIFICATION');
-    console.log('='.repeat(50));
-    console.log(`To: ${data.userEmail}`);
-    console.log(`Subject: Ticket Confirmation - ${data.eventTitle}`);
-    console.log('_____________________________');
-    console.log(`Dear ${data.userName},`);
-    console.log('_____________________________');
-    console.log(`Your ticket has been successfully purchased!`);
-    console.log('_____________________________');
-    console.log(`Event: ${data.eventTitle}`);
-    console.log(`Date: ${new Date(data.eventDate).toLocaleString()}`);
-    console.log(`Ticket ID: ${data.ticketId}`);
-    console.log('_____________________________');
-    console.log('Thank you for your purchase');
-    console.log('='.repeat(50));
+    const emailContent = [
+      '='.repeat(50),
+      'EMAIL NOTIFICATION',
+      '='.repeat(50),
+      `To: ${data.userEmail}`,
+      `Subject: Ticket Confirmation - ${data.eventTitle}`,
+      '_____________________________',
+      `Dear ${data.userName},`,
+      '_____________________________',
+      'Your ticket has been successfully purchased!',
+      '_____________________________',
+      `Event: ${data.eventTitle}`,
+      `Date: ${new Date(data.eventDate).toLocaleString()}`,
+      `Ticket ID: ${data.ticketId}`,
+      '_____________________________',
+      'Thank you for your purchase',
+      '='.repeat(50),
+    ].join('\n');
+
+    this.logger.log(emailContent);
 
     await this.eventsGateway.emitTicketPurchased(
       data.eventId,
