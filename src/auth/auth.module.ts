@@ -4,7 +4,8 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UsersModule } from '../users/users.module';
+import { UsersModule } from '../modules/users/users.module';
+import { EventsModule } from '../modules/events/events.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -12,6 +13,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 @Module({
   imports: [
     UsersModule,
+    EventsModule,
     PrismaModule,
     PassportModule,
     JwtModule.registerAsync({

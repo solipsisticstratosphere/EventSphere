@@ -1,10 +1,13 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, NotFoundException, Inject } from '@nestjs/common';
+import { EventRepository } from '../../modules/events/domain/repositories/event.repository.interface';
+import { EVENT_REPOSITORY } from '../../modules/events/events.tokens';
 import { Role } from '@prisma/client';
 
 @Injectable()
 export class EventOwnershipGuard implements CanActivate {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @Inject(EVENT_REPOSITORY) private eventRepository: EventRepository,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -19,10 +22,7 @@ export class EventOwnershipGuard implements CanActivate {
       return true;
     }
 
-    const event = await this.prisma.event.findUnique({
-      where: { id: eventId },
-      select: { userId: true },
-    });
+    const event = await this.eventRepository.findById(eventId);
 
     if (!event) {
       throw new NotFoundException('Event not found');

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { S3Service } from './s3.service';
+import { S3Service } from '../shared/services/s3.service';
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
 jest.mock('@aws-sdk/client-s3');
