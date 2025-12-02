@@ -1,24 +1,29 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../users/users.service';
+import { UserRepository } from '../modules/users/domain/repositories/user.repository.interface';
 import { PrismaService } from '../prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
+import { CreateUserUseCase } from '../modules/users/application/use-cases/create-user.use-case';
+import { GetUserByEmailUseCase } from '../modules/users/application/use-cases/get-user-by-email.use-case';
+import { GetUserUseCase } from '../modules/users/application/use-cases/get-user.use-case';
+import { PasswordUtil } from '../shared/utils/password.util';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    private createUserUseCase: CreateUserUseCase,
+    private getUserByEmailUseCase: GetUserByEmailUseCase,
+    private getUserUseCase: GetUserUseCase,
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-    const user = await this.usersService.create({
+    const hashedPassword = await PasswordUtil.hash(registerDto.password);
+    const user = await this.createUserUseCase.execute({
       ...registerDto,
       password: hashedPassword,
     });
@@ -34,33 +39,34 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.findByEmail(loginDto.email);
-    if (!user) {
+    try {
+      const user = await this.getUserByEmailUseCase.execute(loginDto.email);
+      
+      const isPasswordValid = await PasswordUtil.compare(loginDto.password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const tokens = await this.generateTokens(user.id, user.email, user.role);
+      await this.updateRefreshToken(user.id, tokens.refresh_token);
+
+      const { password, refreshToken, ...result } = user;
+      return {
+        user: result,
+        ...tokens,
+      };
+    } catch (error) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
-    await this.updateRefreshToken(user.id, tokens.refresh_token);
-
-    const { password, refreshToken, ...result } = user;
-    return {
-      user: result,
-      ...tokens,
-    };
   }
 
   async refresh(userId: string, refreshToken: string) {
-    const user = await this.usersService.findOne(userId);
+    const user = await this.getUserUseCase.execute(userId);
     if (!user || !user.refreshToken) {
       throw new UnauthorizedException('Access denied');
     }
 
-    const refreshTokenMatches = await bcrypt.compare(
+    const refreshTokenMatches = await PasswordUtil.compare(
       refreshToken,
       user.refreshToken,
     );
@@ -104,7 +110,7 @@ export class AuthService {
   }
 
   private async updateRefreshToken(userId: string, refreshToken: string) {
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const hashedRefreshToken = await PasswordUtil.hash(refreshToken);
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: hashedRefreshToken },
@@ -112,6 +118,6 @@ export class AuthService {
   }
 
   async validateUser(userId: string) {
-    return this.usersService.findOne(userId);
+    return this.getUserUseCase.execute(userId);
   }
 }
