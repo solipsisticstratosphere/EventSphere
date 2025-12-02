@@ -12,6 +12,7 @@ export interface TicketRepository {
   findById(id: string): Promise<Ticket | null>;
   findByUserAndEvent(userId: string, eventId: string): Promise<Ticket | null>;
   findByUser(userId: string): Promise<Ticket[]>;
+  findByEvent(eventId: string): Promise<Ticket[]>;
   findAll(): Promise<Ticket[]>;
   update(id: string, data: TicketUpdateData): Promise<Ticket>;
   delete(id: string): Promise<void>;

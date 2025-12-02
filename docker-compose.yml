@@ -81,6 +81,21 @@ services:
     networks:
       - eventsphere-network
 
+  notifications:
+    build:
+      context: ../notifications-service
+      dockerfile: Dockerfile
+    container_name: eventsphere-notifications
+    restart: unless-stopped
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - eventsphere-network
+
   bull-board:
     image: deadly0/bull-board:latest
     container_name: eventsphere-bull-board
