@@ -11,3 +11,5 @@ export * from "./pipes/validation.pipe";
 export * from "./config/core-config.module";
 
 export * from "./errors";
+
+export * from "./cache";
