@@ -5,7 +5,6 @@ import {
   EventRepository,
 } from "../../domain/repositories/ticket.repository.interface";
 import { PaymentService } from "../../domain/services/payment.service.interface";
-import { NotificationService } from "../../domain/services/notification.service.interface";
 import { Ticket } from "../../domain/entities/ticket.entity";
 import {
   TicketEventNotFoundError,
@@ -17,9 +16,9 @@ import {
   TICKET_REPOSITORY,
   TICKET_EVENT_REPOSITORY,
   PAYMENT_SERVICE,
-  NOTIFICATION_SERVICE,
 } from "../../tickets.tokens";
 import { TicketStatus } from "@prisma/client";
+import { EventEmitterService, TicketPaidEvent } from "../../../../shared";
 
 @Injectable()
 export class PurchaseTicketUseCase {
@@ -29,8 +28,7 @@ export class PurchaseTicketUseCase {
     @Inject(TICKET_EVENT_REPOSITORY)
     private readonly eventRepository: EventRepository,
     @Inject(PAYMENT_SERVICE) private readonly paymentService: PaymentService,
-    @Inject(NOTIFICATION_SERVICE)
-    private readonly notificationService: NotificationService
+    private readonly eventEmitter: EventEmitterService
   ) {}
 
   async execute(
@@ -69,16 +67,14 @@ export class PurchaseTicketUseCase {
           status: TicketStatus.PAID,
         });
 
-        await this.notificationService.sendTicketPurchasedNotification({
-          userId: paidTicket.userId,
+        const ticketPaidEvent: TicketPaidEvent = {
           userEmail: event.user?.email || "",
-          userName: event.user?.name || "",
-          eventId: paidTicket.eventId,
           eventTitle: event.title,
-          eventDate:
-            event.date instanceof Date ? event.date : new Date(event.date),
           ticketId: paidTicket.id,
-        });
+          userName: event.user?.name,
+          eventDate: event.date instanceof Date ? event.date.toISOString() : event.date,
+        };
+        this.eventEmitter.emit('ticket.paid', ticketPaidEvent);
 
         return {
           success: true,

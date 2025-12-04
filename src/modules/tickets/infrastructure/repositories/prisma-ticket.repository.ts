@@ -46,6 +46,25 @@ export class PrismaTicketRepository implements TicketRepository {
     return tickets.map(ticket => Ticket.fromPrisma(ticket));
   }
 
+  async findByEvent(eventId: string): Promise<Ticket[]> {
+    const tickets = await this.prisma.ticket.findMany({
+      where: { eventId },
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+
+    return tickets.map(ticket => {
+      const ticketEntity = Ticket.fromPrisma(ticket);
+      (ticketEntity as any).user = ticket.user;
+      return ticketEntity;
+    });
+  }
+
   async findAll(): Promise<Ticket[]> {
     const tickets = await this.prisma.ticket.findMany();
     return tickets.map(ticket => Ticket.fromPrisma(ticket));

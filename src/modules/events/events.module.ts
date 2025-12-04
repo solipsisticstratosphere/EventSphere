@@ -22,6 +22,8 @@ import {
 import { PrismaModule } from "../../prisma/prisma.module";
 import { EventOwnershipGuard } from "../../auth/guards/event-ownership.guard";
 import { EVENT_REPOSITORY } from "./events.tokens";
+import { PrismaTicketRepository } from "../tickets/infrastructure/repositories/prisma-ticket.repository";
+import { TICKET_REPOSITORY } from "../tickets/tickets.tokens";
 
 @Module({
   imports: [PrismaModule],
@@ -30,6 +32,10 @@ import { EVENT_REPOSITORY } from "./events.tokens";
     {
       provide: EVENT_REPOSITORY,
       useClass: PrismaEventRepository,
+    },
+    {
+      provide: TICKET_REPOSITORY,
+      useClass: PrismaTicketRepository,
     },
     {
       provide: FILE_DELETE_SERVICE,
