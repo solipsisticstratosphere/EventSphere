@@ -6,10 +6,11 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { ValidationPipe } from './pipes/validation.pipe';
+import { CacheModule } from './cache/cache.module';
 
 @Global()
 @Module({
-  imports: [CoreConfigModule.forRoot()],
+  imports: [CoreConfigModule.forRoot(), CacheModule],
   providers: [
     AppLogger,
     {
@@ -29,10 +30,7 @@ import { ValidationPipe } from './pipes/validation.pipe';
       useClass: ValidationPipe,
     },
   ],
-  exports: [AppLogger, CoreConfigModule],
+  exports: [AppLogger, CoreConfigModule, CacheModule],
 })
 export class CoreModule {}
-
-
-
 

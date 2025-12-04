@@ -19,6 +19,7 @@ import {
 } from "../../tickets.tokens";
 import { TicketStatus } from "@prisma/client";
 import { EventEmitterService, TicketPaidEvent } from "../../../../shared";
+import { CacheService } from "../../../../core/cache/cache.service";
 
 @Injectable()
 export class PurchaseTicketUseCase {
@@ -28,7 +29,8 @@ export class PurchaseTicketUseCase {
     @Inject(TICKET_EVENT_REPOSITORY)
     private readonly eventRepository: EventRepository,
     @Inject(PAYMENT_SERVICE) private readonly paymentService: PaymentService,
-    private readonly eventEmitter: EventEmitterService
+    private readonly eventEmitter: EventEmitterService,
+    private readonly cacheService: CacheService
   ) {}
 
   async execute(
@@ -66,6 +68,9 @@ export class PurchaseTicketUseCase {
         const paidTicket = await this.ticketRepository.update(ticket.id, {
           status: TicketStatus.PAID,
         });
+
+        await this.cacheService.delPattern('tickets:list*');
+        await this.cacheService.delPattern('events:list*');
 
         const ticketPaidEvent: TicketPaidEvent = {
           userEmail: event.user?.email || "",

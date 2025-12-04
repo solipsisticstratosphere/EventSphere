@@ -14,7 +14,7 @@ import {
   BadRequestException,
 } from "@nestjs/common";
 import { FilesInterceptor } from "@nestjs/platform-express";
-import { CacheInterceptor } from "@nestjs/cache-manager";
+import { CacheInterceptor } from "../../../../core/cache/cache.interceptor";
 import { ThrottlerGuard } from "@nestjs/throttler";
 import {
   ApiTags,
@@ -26,7 +26,7 @@ import { JwtAuthGuard } from "../../../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../../../auth/guards/roles.guard";
 import { EventOwnershipGuard } from "../../../../auth/guards/event-ownership.guard";
 import { Roles } from "../../../../auth/decorators/roles.decorator";
-import { CacheTTL } from "../../../../shared/decorators";
+import { CacheTTL, CacheKey } from "../../../../shared/decorators";
 import { Role } from "@prisma/client";
 import { CreateEventDto } from "../../application/dto/create-event.dto";
 import { UpdateEventDto } from "../../application/dto/update-event.dto";
@@ -83,7 +83,8 @@ export class EventsController {
 
   @Get()
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(30)
+  @CacheKey('events:list')
+  @CacheTTL(300)
   @ApiOperation({ summary: "Get all events" })
   @ApiResponse({ status: 200, description: "Return all events" })
   async findAll(@Query() query: QueryEventDto) {
@@ -96,7 +97,8 @@ export class EventsController {
 
   @Get(":id")
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(60)
+  @CacheKey('events:detail')
+  @CacheTTL(300)
   @ApiOperation({ summary: "Get event by id" })
   @ApiResponse({ status: 200, description: "Return event details" })
   @ApiResponse({ status: 404, description: "Event not found" })

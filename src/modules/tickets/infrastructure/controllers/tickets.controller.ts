@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors } from '@nestjs/common';
 import { CreateTicketDto } from '../../application/dto/create-ticket.dto';
 import { UpdateTicketDto } from '../../application/dto/update-ticket.dto';
 import { JwtAuthGuard } from '../../../../auth/guards/jwt-auth.guard';
+import { CacheInterceptor } from '../../../../core/cache/cache.interceptor';
+import { CacheKey, CacheTTL } from '../../../../shared/decorators';
 import { PurchaseTicketUseCase } from '../../application/use-cases/purchase-ticket.use-case';
 import { CreateTicketUseCase } from '../../application/use-cases/create-ticket.use-case';
 import { GetTicketUseCase } from '../../application/use-cases/get-ticket.use-case';
@@ -61,6 +63,9 @@ export class TicketsController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('tickets:list')
+  @CacheTTL(300)
   async findAll() {
     const tickets = await this.listTicketsUseCase.execute();
     return tickets.map(ticket => this.mapTicketToResponse(ticket));

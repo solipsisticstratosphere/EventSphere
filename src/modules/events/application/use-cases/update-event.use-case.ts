@@ -7,13 +7,15 @@ import { EVENT_REPOSITORY } from '../../events.tokens';
 import { EventEmitterService, EventUpdatedEvent } from '../../../../shared';
 import { TicketRepository } from '../../../tickets/domain/repositories/ticket.repository.interface';
 import { TICKET_REPOSITORY } from '../../../tickets/tickets.tokens';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 @Injectable()
 export class UpdateEventUseCase {
   constructor(
     @Inject(EVENT_REPOSITORY) private readonly eventRepository: EventRepository,
     @Inject(TICKET_REPOSITORY) private readonly ticketRepository: TicketRepository,
-    private readonly eventEmitter: EventEmitterService
+    private readonly eventEmitter: EventEmitterService,
+    private readonly cacheService: CacheService
   ) {}
 
   async execute(id: string, updateEventDto: UpdateEventDto): Promise<Event> {
@@ -56,6 +58,9 @@ export class UpdateEventUseCase {
     if (updateEventDto.status !== undefined) updateData.status = updateEventDto.status;
 
     const updatedEvent = await this.eventRepository.update(id, updateData);
+
+    await this.cacheService.delPattern('events:list*');
+    await this.cacheService.delPattern(`events:detail*:${id}*`);
 
     if (changes.length > 0) {
       const tickets = await this.ticketRepository.findByEvent(id);
